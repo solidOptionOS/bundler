@@ -11,9 +11,7 @@ else
   File.expand_path("tmp/rubygems")
 end
 
-def bundler_spec
-  @bundler_spec ||= Gem::Specification.load("bundler.gemspec")
-end
+BUNDLER_SPEC = Gem::Specification.load("bundler.gemspec")
 
 def safe_task(&block)
   yield
@@ -39,10 +37,10 @@ end
 namespace :spec do
   desc "Ensure spec dependencies are installed"
   task :deps do
-    deps = Hash[bundler_spec.development_dependencies.map do |d|
+    deps = Hash[BUNDLER_SPEC.development_dependencies.map do |d|
       [d.name, d.requirement.to_s]
     end]
-    deps["rubocop"] ||= "= 0.50.0" if RUBY_VERSION >= "2.0.0" # can't go in the gemspec because of the ruby version requirement
+    deps["rubocop"] ||= "= 0.49.1" if RUBY_VERSION >= "2.0.0" # can't go in the gemspec because of the ruby version requirement
 
     # JRuby can't build ronn or rdiscount, so we skip that
     if defined?(RUBY_ENGINE) && RUBY_ENGINE == "jruby"
@@ -80,7 +78,7 @@ namespace :spec do
       sh "sudo apt-get install graphviz -y 2>&1 | tail -n 2"
 
       # Install the gems with a consistent version of RubyGems
-      sh "gem update --system 2.6.13"
+      sh "gem update --system 2.6.12"
 
       $LOAD_PATH.unshift("./spec")
       require "support/rubygems_ext"
@@ -93,7 +91,7 @@ namespace :spec do
 end
 
 begin
-  rspec = bundler_spec.development_dependencies.find {|d| d.name == "rspec" }
+  rspec = BUNDLER_SPEC.development_dependencies.find {|d| d.name == "rspec" }
   gem "rspec", rspec.requirement.to_s
   require "rspec/core/rake_task"
 
@@ -103,10 +101,9 @@ begin
 
   if RUBY_VERSION >= "2.0.0"
     # can't go in the gemspec because of the ruby version requirement
-    gem "rubocop", "= 0.50.0"
+    gem "rubocop", "= 0.49.1"
     require "rubocop/rake_task"
-    rubocop = RuboCop::RakeTask.new
-    rubocop.options = ["--parallel"]
+    RuboCop::RakeTask.new
   end
 
   namespace :spec do
@@ -147,7 +144,7 @@ begin
       rubyopt = ENV["RUBYOPT"]
       # When editing this list, also edit .travis.yml!
       branches = %w[master]
-      releases = %w[v2.5.2 v2.6.14 v2.7.7]
+      releases = %w[v1.3.6 v1.3.7 v1.4.2 v1.5.3 v1.6.2 v1.7.2 v1.8.29 v2.0.14 v2.1.11 v2.2.5 v2.4.8 v2.5.2 v2.6.8 v2.6.14 v2.7.4]
       (branches + releases).each do |rg|
         desc "Run specs with RubyGems #{rg}"
         RSpec::Core::RakeTask.new(rg) do |t|
@@ -246,6 +243,7 @@ begin
       end
     end
   end
+
 rescue LoadError
   task :spec do
     abort "Run `rake spec:deps` to be able to run the specs"
@@ -313,6 +311,7 @@ begin
 
     task(:require) {}
   end
+
 rescue LoadError
   namespace :man do
     task(:require) { abort "Install the ronn gem to be able to release!" }
