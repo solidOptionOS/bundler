@@ -378,6 +378,17 @@ RSpec.describe Bundler::SharedHelpers do
       it_behaves_like "ENV['RUBYLIB'] gets set correctly"
     end
 
+    context "bundle exec in ENV['BUNDLE_BIN_PATH'] does not exist" do
+      before do
+        ENV["BUNDLE_BIN_PATH"] = "/does/not/exist"
+      end
+
+      it "sets BUNDLE_BIN_PATH to the bundle executable file" do
+        subject.set_bundle_environment
+        expect(ENV["BUNDLE_BIN_PATH"]).to eq(File.expand_path("../../../exe/bundle", __FILE__))
+      end
+    end
+
     context "ENV['RUBYLIB'] already contains the bundler's ruby version lib path" do
       let(:ruby_lib_path) { "stubbed_ruby_lib_dir" }
 
