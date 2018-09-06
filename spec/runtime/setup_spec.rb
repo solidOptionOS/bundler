@@ -882,7 +882,7 @@ end
     end
 
     it "should successfully require 'bundler/setup'" do
-      install_gemfile ""
+      install_gemfile "", :system_gemfile => true
 
       ENV["GEM_PATH"] = symlinked_gem_home.path
 
